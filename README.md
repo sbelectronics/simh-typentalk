@@ -8,7 +8,10 @@ I did this by modifying (aka "Adding ugly hacks to") the SWTP6800
 simulator. I moved the ACIA, moved the boot rom, added a fake
 votrax ic, forced it into PSEND mode, etc. It cannot actually use
 the fake votrax because the 6800 emulator does not support
-interrupts.
+interrupts, but it can output phoneme encodings out the ACIA
+where they can be camptured. This could be used as a rudimentary
+text-to-phoneme translator, that perfectly emulates the translation
+rules of the type n talk.
 
 Run this as follows:
 
