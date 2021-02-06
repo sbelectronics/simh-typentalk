@@ -136,23 +136,37 @@ int32 CPU_BD_get_mbyte(int32 addr)
 
     sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: addr=%04X\n", addr);
     switch(addr & 0xF000) {
-        case 0xA000:
+        // 1K RAM at 0x0000, aliased at 0x1000
+/* the b2 board has ram so we don't need this
+        case 0x0000:
             if (CPU_BD_unit.flags & UNIT_RAM) {
-                val = m6810_get_mbyte(addr - 0xA000) & 0xFF;
+                val = m6810_get_mbyte(addr & 0x0FFF) & 0xFF;
                 sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: m6810 val=%02X\n", val);
             } else {
                 val = MB_get_mbyte(addr) & 0xFF;
                 sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: m6810 val=%02X\n", val);
             }
             break;
+*/
+
+        // boot rom aliased to 6000, 7000, E000, F000
+        case 0x6000:
+            val = BOOTROM_get_mbyte(addr - 0x6000) & 0xFF;
+            sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: EPROM=%02X\n", val);
+            break;           
+        case 0x7000:
+            val = BOOTROM_get_mbyte(addr - 0x7000) & 0xFF;
+            sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: EPROM=%02X\n", val);
+            break;           
         case 0xE000:
             val = BOOTROM_get_mbyte(addr - 0xE000) & 0xFF;
             sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: EPROM=%02X\n", val);
             break;
         case 0xF000:
-            val = BOOTROM_get_mbyte(addr - (0x10000 - BOOTROM_unit.capac)) & 0xFF;
+            val = BOOTROM_get_mbyte(addr - 0xF000) & 0xFF;
             sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: EPROM=%02X\n", val);
-            break;
+            break;        
+
         default:
             val = MB_get_mbyte(addr) & 0xFF;
             sim_debug (DEBUG_read, &CPU_BD_dev, "CPU_BD_get_mbyte: mp_b2 val=%02X\n", val);
@@ -181,12 +195,6 @@ void CPU_BD_put_mbyte(int32 addr, int32 val)
     sim_debug (DEBUG_write, &CPU_BD_dev, "CPU_BD_put_mbyte: addr=%04X, val=%02X\n",
         addr, val);
     switch(addr & 0xF000) {
-        case 0xA000:
-            if (CPU_BD_unit.flags & UNIT_RAM)
-                m6810_put_mbyte(addr - 0xA000, val);
-            else
-                MB_put_mbyte(addr, val);
-            break;
         default:
             MB_put_mbyte(addr, val);
     }

@@ -193,7 +193,7 @@ t_stat ptp_svc (UNIT *uptr)
 t_stat sio_reset (DEVICE *dptr)
 {
     sio_unit.buf = 0;                   // Data buffer
-    sio_unit.u3 = 0x02;                 // Status buffer
+    sio_unit.u3 = 0x02;  // TXE set to indicate transmit empty. CD=0 and CTS=0 indicate CD and CTS asserted                 // Status buffer
     sio_unit.wait = 10000;
     sim_activate (&sio_unit, sio_unit.wait); // activate unit
     return SCPE_OK;
@@ -286,6 +286,9 @@ int32 sio0d(int32 io, int32 data)
     } else {                            // data register write
         if (isprint(data) || data == '\r' || data == '\n') { // printable?
             sim_putchar(data);          // print character on console
+            if (data == '\r') {
+                sim_putchar('\n'); // add linefeed
+            }
             if (ptp_flag && ptp_unit.flags & UNIT_ATT) { // PTP enabled & attached?
                 putc(data, ptp_unit.fileref);
                 ptp_unit.pos++;         // step character counter

@@ -32,6 +32,7 @@
 */
 
 #include <stdio.h>
+#include <unistd.h>
 #include "swtp_defs.h"
 
 #define UNIT_V_RAM_0000   (UNIT_V_UF)   /* MP-8M board 0 enable */
@@ -177,6 +178,17 @@ DEVICE MB_dev = {
 
 /*  get a byte from memory */
 
+extern void dump_regs(void);
+
+int slowness = 0;
+void slow_the_hell_down()
+{
+    slowness++;
+    if ((slowness % 10) == 0) {
+        usleep(1);
+    }
+}
+
 int32 MB_get_mbyte(int32 addr)
 {
     int32 val;
@@ -185,7 +197,10 @@ int32 MB_get_mbyte(int32 addr)
     switch(addr & 0xF000) {
         case 0x0000:
         case 0x1000:
-            if (MB_unit.flags & UNIT_RAM_0000) {
+            if (addr == 0x0047) {
+                // force mode_spend to true
+                val = 1;
+            } else if (MB_unit.flags & UNIT_RAM_0000) {
                 val = mp_8m_get_mbyte(addr) & 0xFF;
                 sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: addr=%04X\n", addr);
                 if (MB_dev.dctrl & DEBUG_read)
@@ -194,58 +209,22 @@ int32 MB_get_mbyte(int32 addr)
                 val = 0xFF;
             break;
         case 0x2000:
-        case 0x3000:
-            if (MB_unit.flags & UNIT_RAM_2000) {
-                val = mp_8m_get_mbyte(addr) & 0xFF;
-                sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: mp_8m val=%02X\n", val);
-            } else
+            if (addr == 0x2002) {
+                val = sio0s(0, 0);
+                slow_the_hell_down();
+            } else if (addr == 0x2003) {
+                val = sio0d(0, 0);
+            } else {
                 val = 0xFF;
-            break;
-        case 0x4000:
-        case 0x5000:
-            if (MB_unit.flags & UNIT_RAM_4000) {
-                val = mp_8m_get_mbyte(addr) & 0xFF;
-                sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: addr=%04X\n", addr);
-                if (MB_dev.dctrl & DEBUG_read)
-                    printf("MB_get_mbyte: mp_8m val=%02X\n", val);
-            } else
-                val = 0xFF;
-            break;
-        case 0x6000:
-        case 0x7000:
-            if (MB_unit.flags & UNIT_RAM_6000) {
-                val = mp_8m_get_mbyte(addr) & 0xFF;
-                sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: mp_8m val=%02X\n", val);
-            } else
-                val = 0xFF;
-            break;
-        case 0x8000:
-            if (addr < 0x8020)
-                val = (dev_table[addr - 0x8000].routine(0, 0)) & 0xFF;
-            else
-                val = 0xFF;
-            sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: I/O addr=%04X val=%02X\n",
-                addr, val);
-            break;
-        case 0xA000:
-        case 0xB000:
-            if (MB_unit.flags & UNIT_RAM_A000) {
-                val = mp_8m_get_mbyte(addr) & 0xFF;
-                sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: mp_8m val=%02X\n", val);
-            } else
-                val = 0xFF;
-            break;
-        case 0xC000:
-        case 0xD000:
-            if (MB_unit.flags & UNIT_RAM_C000) {
-                val = mp_8m_get_mbyte(addr) & 0xFF;
-                sim_debug (DEBUG_read, &MB_dev, "MB_get_mbyte: mp_8m val=%02X\n", val);
-            } else
-                val = 0xFF;
+            }
             break;
         default:
             val = 0xFF;
     }
+    /*if (addr == 0x4C) {
+      dump_regs();
+      printf(" read %02X=%02X\n", addr, val);
+    }*/
     return val;
 }
 
@@ -277,43 +256,22 @@ void MB_put_mbyte(int32 addr, int32 val)
             }
             break;
         case 0x2000:
-        case 0x3000:
-            if (MB_unit.flags & UNIT_RAM_2000) {
-                mp_8m_put_mbyte(addr, val);
+            if (addr == 0x2002) {
+                sio0s(1, val);
+            } else if (addr == 0x2003) {
+                sio0d(1, val);
             }
             break;
         case 0x4000:
-        case 0x5000:
-            if (MB_unit.flags & UNIT_RAM_4000) {
-                mp_8m_put_mbyte(addr, val);
-            }
-            break;
-        case 0x6000:
-        case 0x7000:
-            if (MB_unit.flags & UNIT_RAM_6000) {
-                mp_8m_put_mbyte(addr, val);
-            }
-            break;
-        case 0x8000:
-            if (addr < 0x8020) {
-                dev_table[addr - 0x8000].routine(1, val);
-            }
-            break;
-        case 0xA000:
-        case 0xB000:
-            if (MB_unit.flags & UNIT_RAM_A000) {
-                mp_8m_put_mbyte(addr, val);
-            }
-            break;
-        case 0xC000:
-        case 0xD000:
-            if (MB_unit.flags & UNIT_RAM_C000) {
-                mp_8m_put_mbyte(addr, val);
-            }
+            fprintf(stdout, "phoneme %02X\n", val);
             break;
         default:
             ;
     }
+    /*if (addr == 0x4C) {
+       dump_regs();
+       printf(" write %02X=%02X\n", addr, val);
+    }*/
 }
 
 /*  put a word to memory */

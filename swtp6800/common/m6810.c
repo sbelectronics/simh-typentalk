@@ -46,7 +46,7 @@ void m6810_put_mbyte(int32 offset, int32 val);
 
 /* SIMH RAM Standard I/O Data Structures */
 
-UNIT m6810_unit = { UDATA (NULL, UNIT_BINK, 128),
+UNIT m6810_unit = { UDATA (NULL, UNIT_BINK, 1024),
                     0 };
 
 MTAB m6810_mod[] = {
@@ -96,12 +96,12 @@ t_stat m6810_reset (DEVICE *dptr)
 {
     sim_debug (DEBUG_flow, &m6810_dev, "m6810_reset: \n");
     if (m6810_unit.filebuf == NULL) {
-        m6810_unit.filebuf = malloc(128);
+        m6810_unit.filebuf = malloc(1024);
         if (m6810_unit.filebuf == NULL) {
             printf("m6810_reset: Malloc error\n");
             return SCPE_MEM;
         }
-        m6810_unit.capac = 128;
+        m6810_unit.capac = 1024;
     }
     sim_debug (DEBUG_flow, &m6810_dev, "m6810_reset: Done\n");
     return SCPE_OK;

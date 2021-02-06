@@ -1,3 +1,44 @@
+* SIMH modified to emulate a votrax type-n-talk
+
+I used this simulator to simulate a T n T for the purpose of using it
+to generate phonetic translations in PSEND mode. It does not produce
+audible speech -- only ASCII.
+
+I did this by modifying (aka "Adding ugly hacks to") the SWTP6800
+simulator. I moved the ACIA, moved the boot rom, added a fake
+votrax ic, forced it into PSEND mode, etc. It cannot actually use
+the fake votrax because the 6800 emulator does not support
+interrupts.
+
+Run this as follows:
+
+```
+make swtp6800mp-a
+BIN/swtp6800mp-a
+```
+
+then paste the contents of typetalk.ini into the SIM command
+prompt. You will then see some gibberish from the T n T
+that looks like this:
+
+```
+          ~_J_jBLCkB^iC
+```
+
+These are probably the phonemes for "system ready". Votrax
+outputs these as the ascii characters 0x40 to 0x7F, one
+character per phoneme. See the T n T manual for a translation.
+Typing a string should output the phonemes. For example,
+
+```
+music
+CLbvwRKIY
+late
+CXFaij
+```
+
+These translate to "PA0 - M - Y1 - IU - U1 - S - I1 - I3 - K" and "PA0 - L -  A1 - AY - Y - T" respectively.
+
 # SIMH v4.0 - 19-01 Current
 
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/11982/badge.svg)](https://scan.coverity.com/projects/simh)
